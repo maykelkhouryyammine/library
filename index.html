@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+<meta name="theme-color" content="#111111"/>
+<title>Library Yammine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --black:#111;--white:#fff;--bg:#F9F8F6;
+  --border:#EBEBEB;--gray1:#555;--gray2:#888;--gray3:#BBB;--gray4:#E5E5E5;
+  --gold:#C9A84C;--r:10px;--r-lg:14px;
+  --shadow:0 1px 8px rgba(0,0,0,.07);--shadow-md:0 4px 20px rgba(0,0,0,.10);
+  --hdr:54px;--nav-w:290px;
+  --fh:'Playfair Display',Georgia,serif;
+  --fb:'Outfit',-apple-system,sans-serif;
+}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;}
+body{font-family:var(--fb);background:var(--bg);color:var(--black);min-height:100vh;overflow-x:hidden;-webkit-tap-highlight-color:transparent;}
+button{font-family:var(--fb);cursor:pointer;}
+img{display:block;max-width:100%;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--gray4);border-radius:99px;}
+
+/* TOAST */
+#toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--black);color:#fff;padding:10px 20px;border-radius:99px;font-size:13px;font-weight:500;white-space:nowrap;z-index:9999;opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ── LEFT NAV DRAWER ── */
+.nb{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;opacity:0;pointer-events:none;transition:opacity .28s;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);}
+.nb.open{opacity:1;pointer-events:all;}
+.nd{position:fixed;top:0;left:0;bottom:0;width:var(--nav-w);background:var(--black);color:#fff;z-index:510;transform:translateX(-100%);transition:transform .3s cubic-bezier(.32,.72,0,1);display:flex;flex-direction:column;overflow:hidden;}
+.nd.open{transform:translateX(0);}
+.nd-head{padding:18px 18px 14px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.nd-brand{font-family:var(--fh);font-size:17px;color:#fff;line-height:1.2;}
+.nd-sub{font-size:9px;color:rgba(255,255,255,.3);letter-spacing:.15em;text-transform:uppercase;margin-top:2px;}
+.nd-close{width:30px;height:30px;background:rgba(255,255,255,.08);border:none;border-radius:50%;color:rgba(255,255,255,.7);font-size:15px;display:flex;align-items:center;justify-content:center;transition:background .15s;}
+.nd-close:active{background:rgba(255,255,255,.18);}
+.nd-links{padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0;}
+.nd-link{display:flex;align-items:center;gap:12px;padding:13px 18px;width:100%;font-size:14px;font-weight:500;color:rgba(255,255,255,.75);background:none;border:none;text-align:left;transition:background .15s,color .15s;border-left:3px solid transparent;}
+.nd-link:active,.nd-link.active{background:rgba(255,255,255,.06);color:#fff;}
+.nd-link.active{border-left-color:var(--gold);}
+.nd-link-ic{font-size:17px;width:22px;text-align:center;flex-shrink:0;}
+.nd-cat-lbl{padding:14px 18px 7px;font-size:10px;font-weight:600;color:var(--gold);letter-spacing:.2em;text-transform:uppercase;flex-shrink:0;}
+.nd-cats{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.nd-cats::-webkit-scrollbar{display:none;}
+.nd-cat{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;width:100%;font-size:13px;color:rgba(255,255,255,.6);background:none;border:none;text-align:left;transition:background .15s,color .15s;border-left:3px solid transparent;gap:8px;}
+.nd-cat:active,.nd-cat.active{background:rgba(201,168,76,.12);color:var(--gold);border-left-color:var(--gold);}
+.nd-cat-l{display:flex;align-items:center;gap:9px;min-width:0;}
+.nd-cat-ic{font-size:16px;flex-shrink:0;}
+.nd-cat-n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.nd-cat-cnt{font-size:10px;color:rgba(255,255,255,.2);background:rgba(255,255,255,.06);padding:2px 6px;border-radius:99px;flex-shrink:0;}
+.nd-foot{padding:14px 18px;border-top:1px solid rgba(255,255,255,.08);font-size:10px;color:rgba(255,255,255,.18);flex-shrink:0;}
+
+/* ── TOP HEADER ── */
+#hdr{position:sticky;top:0;z-index:200;background:var(--white);border-bottom:1px solid var(--border);box-shadow:var(--shadow);height:var(--hdr);}
+.hdr-in{display:flex;align-items:center;padding:0 12px;height:100%;gap:10px;max-width:640px;margin:0 auto;}
+.hamburger{width:38px;height:38px;flex-shrink:0;background:none;border:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border-radius:8px;transition:background .15s;}
+.hamburger:active{background:var(--gray4);}
+.hamburger span{display:block;width:19px;height:1.5px;background:var(--black);border-radius:2px;}
+.hdr-logo{flex:1;min-width:0;font-family:var(--fh);font-size:17px;color:var(--black);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hdr-logo small{font-size:10px;color:var(--gray3);font-family:var(--fb);font-weight:400;letter-spacing:.08em;margin-left:5px;}
+.hdr-r{display:flex;align-items:center;gap:7px;flex-shrink:0;}
+.hdr-srch{width:36px;height:36px;border-radius:50%;background:var(--bg);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:15px;transition:background .15s;}
+.hdr-srch:active{background:var(--gray4);}
+.hdr-cart{display:flex;align-items:center;gap:5px;background:var(--black);color:#fff;border:none;border-radius:99px;padding:7px 13px;font-size:13px;font-weight:600;transition:opacity .15s;white-space:nowrap;}
+.hdr-cart:active{opacity:.8;}
+.cart-badge{background:var(--gold);color:var(--black);font-size:10px;font-weight:800;min-width:17px;height:17px;border-radius:99px;padding:0 3px;display:none;align-items:center;justify-content:center;}
+.cart-badge.show{display:flex;}
+
+/* ── SEARCH OVERLAY ── */
+.srch-ov{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.55);display:none;flex-direction:column;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);}
+.srch-ov.open{display:flex;}
+.srch-bar{background:var(--white);padding:10px 12px;display:flex;align-items:center;gap:8px;}
+.srch-in{flex:1;border:none;outline:none;font-size:16px;font-family:var(--fb);color:var(--black);background:transparent;padding:6px 0;}
+.srch-in::placeholder{color:var(--gray3);}
+.srch-cancel{font-size:14px;font-weight:600;color:var(--gray1);background:none;border:none;padding:6px;white-space:nowrap;}
+.srch-area{flex:1;overflow-y:auto;background:var(--white);padding:0 12px 60px;-webkit-overflow-scrolling:touch;}
+.srch-item{display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;}
+.srch-img{width:46px;height:46px;border-radius:8px;background:var(--gray4);flex-shrink:0;object-fit:cover;}
+.srch-img-ph{width:46px;height:46px;border-radius:8px;background:var(--gray4);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:19px;}
+.srch-info{flex:1;min-width:0;}
+.srch-name{font-size:13px;font-weight:500;}
+.srch-cat{font-size:11px;color:var(--gray2);margin-top:1px;}
+.srch-price{font-size:13px;font-weight:700;flex-shrink:0;}
+.srch-msg{text-align:center;padding:50px 20px;font-size:13px;color:var(--gray3);}
+
+/* ── APP WRAPPER ── */
+#app{max-width:640px;margin:0 auto;padding:0 0 100px;}
+.page{display:none;}
+.page.active{display:block;animation:pgIn .16s ease;}
+@keyframes pgIn{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── HOME ── */
+.home-hero{background:var(--black);margin:12px 12px 0;border-radius:var(--r-lg);padding:34px 22px 30px;position:relative;overflow:hidden;}
+.h-glow{position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(201,168,76,.18) 0%,transparent 70%);pointer-events:none;}
+.h-eyebrow{font-size:10px;font-weight:600;color:var(--gold);letter-spacing:.22em;text-transform:uppercase;margin-bottom:9px;}
+.h-title{font-family:var(--fh);font-size:30px;color:#fff;line-height:1.2;margin-bottom:9px;}
+.h-sub{font-size:13px;color:rgba(255,255,255,.42);line-height:1.7;margin-bottom:20px;}
+.h-btn{display:inline-flex;align-items:center;gap:7px;background:var(--white);color:var(--black);border:none;border-radius:99px;padding:10px 20px;font-size:13px;font-weight:700;transition:transform .12s;}
+.h-btn:active{transform:scale(.95);}
+
+.sec-hd{display:flex;align-items:center;justify-content:space-between;padding:20px 12px 10px;}
+.sec-title{font-family:var(--fh);font-size:18px;color:var(--black);}
+.sec-link{font-size:13px;font-weight:500;color:var(--gray2);background:none;border:none;padding:4px 0;transition:color .15s;}
+.sec-link:active{color:var(--black);}
+
+/* Category strip */
+.cat-strip{display:flex;gap:9px;overflow-x:auto;padding:0 12px 4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.cat-strip::-webkit-scrollbar{display:none;}
+.cat-pill{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:12px 16px;background:var(--white);border:1.5px solid var(--border);border-radius:12px;flex-shrink:0;cursor:pointer;transition:all .15s;min-width:80px;}
+.cat-pill:active{background:var(--black);border-color:var(--black);}
+.cat-pill:active .cp-ic,.cat-pill:active .cp-nm{color:#fff!important;}
+.cp-ic{font-size:20px;}
+.cp-nm{font-size:10px;font-weight:600;color:var(--black);text-align:center;white-space:nowrap;}
+
+/* ── ITEMS GRID (2 col mobile) ── */
+.ig{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:4px 12px 0;}
+@media(min-width:480px){.ig{grid-template-columns:repeat(3,1fr);gap:11px;}}
+
+.ic{background:var(--white);border-radius:var(--r);overflow:hidden;border:1px solid var(--border);position:relative;}
+.ic-img{width:100%;aspect-ratio:1/1;background:var(--gray4);position:relative;overflow:hidden;}
+.ic-img img{width:100%;height:100%;object-fit:cover;}
+.ic-ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;color:var(--gray3);}
+.feat-badge{position:absolute;top:7px;left:7px;background:var(--black);color:#fff;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;border-radius:99px;z-index:2;}
+.ic-body{padding:9px 9px 11px;}
+.ic-cat{font-size:9px;font-weight:700;color:var(--gray2);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px;}
+.ic-name{font-size:12px;font-weight:500;color:var(--black);line-height:1.4;margin-bottom:9px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.ic-foot{display:flex;align-items:center;justify-content:space-between;gap:5px;}
+.ic-price{font-size:14px;font-weight:700;color:var(--black);white-space:nowrap;}
+.add-btn{width:30px;height:30px;border-radius:50%;background:var(--black);color:#fff;border:none;font-size:19px;font-weight:300;line-height:1;display:flex;align-items:center;justify-content:center;transition:transform .1s,background .15s;flex-shrink:0;}
+.add-btn:active{transform:scale(.85);}
+.add-btn.added{background:var(--gold);font-size:14px;}
+
+/* Skeleton */
+.sk-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:4px 12px 0;}
+@media(min-width:480px){.sk-grid{grid-template-columns:repeat(3,1fr);}}
+.sk-c{background:var(--white);border-radius:var(--r);overflow:hidden;border:1px solid var(--border);}
+.sk-img{width:100%;aspect-ratio:1/1;background:linear-gradient(90deg,var(--gray4) 0%,#f0f0f0 50%,var(--gray4) 100%);background-size:200% 100%;animation:sk 1.3s ease infinite;}
+.sk-body{padding:9px;}
+.sk-l{height:10px;border-radius:4px;background:linear-gradient(90deg,var(--gray4) 0%,#f0f0f0 50%,var(--gray4) 100%);background-size:200% 100%;animation:sk 1.3s ease infinite;margin-bottom:7px;}
+.sk-l.s{width:55%;}
+@keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ── CAT PAGE ── */
+.cat-ph{padding:16px 12px 12px;border-bottom:1px solid var(--border);background:var(--white);}
+.cat-ph-title{font-family:var(--fh);font-size:22px;color:var(--black);margin-bottom:3px;}
+.cat-ph-cnt{font-size:12px;color:var(--gray2);}
+.filt-strip{display:flex;gap:7px;overflow-x:auto;padding:10px 12px;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+.filt-strip::-webkit-scrollbar{display:none;}
+.fc{flex-shrink:0;padding:6px 14px;border-radius:99px;border:1.5px solid var(--border);background:var(--white);font-size:12px;font-weight:500;color:var(--gray1);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.fc.active{background:var(--black);border-color:var(--black);color:#fff;}
+.fc:active{transform:scale(.95);}
+
+/* ── PAGINATION ── */
+.pag{display:flex;align-items:center;justify-content:center;gap:5px;padding:22px 12px 6px;flex-wrap:wrap;}
+.pn{width:36px;height:36px;border-radius:50%;background:var(--white);border:1.5px solid var(--border);font-size:13px;font-weight:500;color:var(--gray1);display:flex;align-items:center;justify-content:center;transition:all .15s;cursor:pointer;}
+.pn.active{background:var(--black);border-color:var(--black);color:#fff;font-weight:700;}
+.pn:active{transform:scale(.92);}
+.pn.dots{background:none;border:none;color:var(--gray3);cursor:default;}
+.pnav{display:flex;align-items:center;gap:4px;background:var(--white);border:1.5px solid var(--border);border-radius:99px;padding:7px 13px;font-size:13px;font-weight:600;color:var(--gray1);transition:all .15s;cursor:pointer;}
+.pnav:active{background:var(--black);border-color:var(--black);color:#fff;}
+.pnav:disabled,.pnav[disabled]{opacity:.35;pointer-events:none;}
+
+/* ── LOADING ── */
+.sec-load{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:60px 20px;color:var(--gray3);font-size:13px;}
+.spinner{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--black);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.empty-st{text-align:center;padding:56px 20px;color:var(--gray3);}
+.empty-ic{font-size:38px;margin-bottom:10px;}
+.empty-t{font-size:15px;font-weight:600;color:var(--gray2);margin-bottom:5px;}
+.empty-s{font-size:13px;}
+
+/* ── ABOUT ── */
+.pg-wrap{padding:12px;}
+.abt-hero{background:var(--black);border-radius:var(--r-lg);padding:32px 22px;margin-bottom:12px;}
+.abt-hero h1{font-family:var(--fh);font-size:26px;color:#fff;margin-bottom:10px;}
+.abt-hero p{font-size:13px;color:rgba(255,255,255,.45);line-height:1.75;}
+.pg-card{background:var(--white);border-radius:var(--r);border:1px solid var(--border);padding:18px;margin-bottom:10px;}
+.pg-card h2{font-family:var(--fh);font-size:17px;color:var(--black);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.pg-card p{font-size:13px;color:var(--gray1);line-height:1.75;margin-bottom:7px;}
+.pg-card p:last-child{margin-bottom:0;}
+.abt-row{display:flex;align-items:flex-start;gap:11px;margin-bottom:11px;}
+.abt-row:last-child{margin-bottom:0;}
+.abt-ic{width:34px;height:34px;background:var(--bg);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.abt-txt strong{display:block;font-size:12px;font-weight:700;color:var(--black);margin-bottom:2px;}
+.abt-txt span{font-size:13px;color:var(--gray1);line-height:1.6;}
+.val-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.val-c{background:var(--bg);border-radius:var(--r);padding:14px;border:1px solid var(--border);}
+.val-em{font-size:20px;margin-bottom:5px;}
+.val-t{font-size:12px;font-weight:700;color:var(--black);margin-bottom:2px;}
+.val-d{font-size:11px;color:var(--gray2);}
+
+/* ── CONTACT ── */
+.form-group{margin-bottom:12px;}
+.form-group label{display:block;font-size:10px;font-weight:700;color:var(--gray2);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;}
+.form-group input,.form-group textarea{width:100%;border:1.5px solid var(--gray4);border-radius:var(--r);padding:11px 13px;font-size:15px;color:var(--black);background:var(--white);font-family:var(--fb);transition:border-color .2s;-webkit-appearance:none;}
+.form-group input:focus,.form-group textarea:focus{outline:none;border-color:var(--black);}
+.form-group textarea{resize:none;}
+.sub-btn{width:100%;padding:13px;background:var(--black);color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:700;letter-spacing:.04em;transition:opacity .15s;font-family:var(--fb);}
+.sub-btn:active{opacity:.8;}
+.sub-btn:disabled{opacity:.5;}
+.suc-box{display:none;text-align:center;padding:32px 18px;}
+.suc-box.show{display:block;}
+.suc-ic{font-size:44px;margin-bottom:10px;}
+.suc-box h3{font-size:18px;font-weight:700;margin-bottom:7px;}
+.suc-box p{font-size:13px;color:var(--gray2);margin-bottom:16px;}
+.rst-btn{background:none;border:1.5px solid var(--border);border-radius:99px;padding:9px 20px;font-size:13px;color:var(--gray1);font-family:var(--fb);}
+
+/* ── CART DRAWER ── */
+.cb{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:700;opacity:0;pointer-events:none;transition:opacity .25s;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);}
+.cb.open{opacity:1;pointer-events:all;}
+.cd{position:fixed;top:0;right:0;bottom:0;width:min(340px,100vw);background:var(--white);z-index:710;transform:translateX(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);display:flex;flex-direction:column;box-shadow:-6px 0 36px rgba(0,0,0,.12);}
+.cd.open{transform:translateX(0);}
+.cd-hd{padding:16px 16px 13px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.cd-hd h2{font-family:var(--fh);font-size:19px;}
+.cd-cl{width:30px;height:30px;border-radius:50%;background:var(--bg);border:none;font-size:16px;color:var(--gray2);display:flex;align-items:center;justify-content:center;transition:background .15s;}
+.cd-cl:active{background:var(--gray4);}
+.cd-list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.cart-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:11px;padding:56px 22px;color:var(--gray3);text-align:center;}
+.cart-empty-ic{font-size:48px;}
+.cart-empty p{font-size:13px;}
+.cart-browse{margin-top:3px;padding:10px 22px;border-radius:99px;background:var(--black);color:#fff;border:none;font-size:13px;font-weight:600;font-family:var(--fb);}
+.ci{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid var(--border);}
+.ci-img{width:52px;height:52px;border-radius:8px;object-fit:cover;background:var(--gray4);flex-shrink:0;}
+.ci-ph{width:52px;height:52px;border-radius:8px;background:var(--gray4);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.ci-inf{flex:1;min-width:0;}
+.ci-nm{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ci-ct{font-size:11px;color:var(--gray2);margin-top:1px;}
+.ci-pr{font-size:12px;font-weight:700;color:var(--black);margin-top:2px;}
+.qty-row{display:flex;align-items:center;gap:5px;flex-shrink:0;}
+.qb{width:27px;height:27px;border-radius:50%;border:1.5px solid var(--gray4);background:none;font-size:14px;font-weight:600;color:var(--gray1);display:flex;align-items:center;justify-content:center;transition:all .12s;}
+.qb:active{background:var(--black);border-color:var(--black);color:#fff;}
+.qb.dl{border-color:#FFD0D0;color:#E53935;font-size:13px;}
+.qb.dl:active{background:#E53935;border-color:#E53935;color:#fff;}
+.qn{width:22px;text-align:center;font-size:13px;font-weight:700;}
+.cd-foot{padding:14px 16px;border-top:1px solid var(--border);flex-shrink:0;padding-bottom:max(14px,env(safe-area-inset-bottom,14px));background:var(--white);}
+.cd-tot{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.cd-tot-l{font-size:11px;font-weight:600;color:var(--gray2);letter-spacing:.1em;text-transform:uppercase;}
+.cd-tot-a{font-family:var(--fh);font-size:26px;font-weight:700;}
+.ck-btn{width:100%;padding:13px;background:var(--black);color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:700;letter-spacing:.04em;font-family:var(--fb);transition:opacity .15s;}
+.ck-btn:active{opacity:.8;}
+.cl-btn{width:100%;margin-top:7px;padding:10px;background:none;border:1.5px solid var(--border);border-radius:var(--r);font-size:13px;color:var(--gray2);font-family:var(--fb);transition:border-color .15s;}
+.cl-btn:active{border-color:var(--gray2);}
+
+/* ── FOOTER ── */
+footer{background:var(--black);color:rgba(255,255,255,.35);padding:28px 18px max(28px,env(safe-area-inset-bottom,28px));text-align:center;margin-top:16px;}
+.ft-logo{font-family:var(--fh);font-size:18px;color:rgba(255,255,255,.65);margin-bottom:6px;}
+.ft-sub{font-size:10px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:14px;}
+.ft-links{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;margin-bottom:14px;}
+.ft-links button{background:none;border:none;font-size:12px;color:rgba(255,255,255,.35);font-family:var(--fb);transition:color .15s;padding:3px 0;}
+.ft-links button:active{color:#fff;}
+.ft-copy{font-size:10px;}
+
+@media(max-width:359px){
+  .ig,.sk-grid{gap:7px;padding:4px 10px 0;}
+  .cat-strip,.filt-strip{padding-left:10px;}
+  .ic-body{padding:7px 7px 9px;}
+  .ic-name{font-size:11px;}
+}
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<!-- LEFT NAV DRAWER -->
+<div class="nb" id="nb" onclick="closeNav()"></div>
+<nav class="nd" id="nd">
+  <div class="nd-head">
+    <div><div class="nd-brand">Library Yammine</div><div class="nd-sub">Est. Lebanon</div></div>
+    <button class="nd-close" onclick="closeNav()">✕</button>
+  </div>
+  <div class="nd-links">
+    <button class="nd-link active" id="nl-home" onclick="navGo('home')"><span class="nd-link-ic">🏠</span>Home</button>
+    <button class="nd-link" id="nl-about" onclick="navGo('about')"><span class="nd-link-ic">ℹ️</span>About</button>
+    <button class="nd-link" id="nl-contact" onclick="navGo('contact')"><span class="nd-link-ic">📞</span>Contact Us</button>
+  </div>
+  <div class="nd-cat-lbl">Categories</div>
+  <div class="nd-cats" id="nd-cats">
+    <button class="nd-cat active" id="nc-all" onclick="navCat('all')">
+      <div class="nd-cat-l"><span class="nd-cat-ic">📦</span><span class="nd-cat-n">All Items</span></div>
+      <span class="nd-cat-cnt" id="ncc-all">—</span>
+    </button>
+  </div>
+  <div class="nd-foot">© 2025 Library Yammine</div>
+</nav>
+
+<!-- TOP HEADER -->
+<header id="hdr">
+  <div class="hdr-in">
+    <button class="hamburger" onclick="openNav()"><span></span><span></span><span></span></button>
+    <div class="hdr-logo" onclick="goHome()">Library Yammine <small>Lebanon</small></div>
+    <div class="hdr-r">
+      <button class="hdr-srch" onclick="openSearch()">🔍</button>
+      <button class="hdr-cart" onclick="openCart()">🛍 <span class="cart-badge" id="cart-badge"></span></button>
+    </div>
+  </div>
+</header>
+
+<!-- SEARCH OVERLAY -->
+<div class="srch-ov" id="srch-ov">
+  <div class="srch-bar">
+    <span style="font-size:17px;color:var(--gray3)">🔍</span>
+    <input class="srch-in" id="srch-in" type="search" placeholder="Search items…" autocomplete="off" oninput="onSrch()"/>
+    <button class="srch-cancel" onclick="closeSearch()">Cancel</button>
+  </div>
+  <div class="srch-area" id="srch-area"><div class="srch-msg">Start typing to search…</div></div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+
+  <!-- HOME -->
+  <div id="page-home" class="page active">
+    <div class="home-hero">
+      <div class="h-glow"></div>
+      <div class="h-eyebrow">✦ Welcome to</div>
+      <h1 class="h-title">Library<br/>Yammine</h1>
+      <p class="h-sub">Stationery, books, art supplies &amp; gifts — curated for every curious mind.</p>
+      <button class="h-btn" onclick="navCat('all')">Browse Collection →</button>
+    </div>
+    <div class="sec-hd"><span class="sec-title">Categories</span></div>
+    <div class="cat-strip" id="home-cats"><div class="cat-pill"><div class="cp-ic">⏳</div><div class="cp-nm">Loading</div></div></div>
+    <div class="sec-hd" style="margin-top:6px">
+      <span class="sec-title">Featured</span>
+      <button class="sec-link" onclick="navCat('all')">View all</button>
+    </div>
+    <div id="home-area">
+      <div class="sk-grid" id="home-sk">
+        <div class="sk-c"><div class="sk-img"></div><div class="sk-body"><div class="sk-l"></div><div class="sk-l s"></div></div></div>
+        <div class="sk-c"><div class="sk-img"></div><div class="sk-body"><div class="sk-l"></div><div class="sk-l s"></div></div></div>
+      </div>
+      <div class="ig" id="home-grid" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- CATEGORY PAGE -->
+  <div id="page-cat" class="page">
+    <div class="cat-ph">
+      <div class="cat-ph-title" id="cat-title">All Items</div>
+      <div class="cat-ph-cnt" id="cat-cnt"></div>
+    </div>
+    <div class="filt-strip" id="filt-strip"></div>
+    <div id="cat-area">
+      <div class="sec-load" id="cat-load"><div class="spinner"></div><span>Loading…</span></div>
+      <div class="ig" id="cat-grid" style="display:none"></div>
+      <div class="empty-st" id="cat-empty" style="display:none"><div class="empty-ic">📦</div><div class="empty-t">Nothing here yet</div><div class="empty-s">Check back soon.</div></div>
+    </div>
+    <div id="pag-wrap"></div>
+  </div>
+
+  <!-- ABOUT -->
+  <div id="page-about" class="page">
+    <div class="pg-wrap">
+      <div class="abt-hero">
+        <h1>About Us</h1>
+        <p>Library Yammine has been a trusted destination for quality stationery, books, art supplies, and gifts — proudly serving Lebanon.</p>
+      </div>
+      <div class="pg-card">
+        <h2>Our Story</h2>
+        <p>Founded in Lebanon, Library Yammine began with a simple mission: to bring high-quality educational and creative supplies to every student, artist, and book lover.</p>
+        <p>Every product we stock is chosen with care — balancing quality, value, and relevance to our community's needs.</p>
+      </div>
+      <div class="pg-card">
+        <h2>Location &amp; Hours</h2>
+        <div class="abt-row"><div class="abt-ic">📍</div><div class="abt-txt"><strong>Address</strong><span>Lebanon</span></div></div>
+        <div class="abt-row"><div class="abt-ic">⏰</div><div class="abt-txt"><strong>Hours</strong><span>Mon – Sat: 9:00 AM – 7:00 PM<br/>Sunday: 10:00 AM – 5:00 PM</span></div></div>
+        <div class="abt-row"><div class="abt-ic">📞</div><div class="abt-txt"><strong>Phone</strong><span>+961 — — — —</span></div></div>
+        <div class="abt-row"><div class="abt-ic">✉️</div><div class="abt-txt"><strong>Email</strong><span>info@libraryyammine.com</span></div></div>
+      </div>
+      <div class="pg-card">
+        <h2>Our Values</h2>
+        <div class="val-grid">
+          <div class="val-c"><div class="val-em">⭐</div><div class="val-t">Quality</div><div class="val-d">Every item carefully selected</div></div>
+          <div class="val-c"><div class="val-em">📖</div><div class="val-t">Knowledge</div><div class="val-d">Supporting education &amp; learning</div></div>
+          <div class="val-c"><div class="val-em">🤝</div><div class="val-t">Community</div><div class="val-d">Proudly serving Lebanon</div></div>
+          <div class="val-c"><div class="val-em">🎨</div><div class="val-t">Creativity</div><div class="val-d">Inspiring imagination</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTACT -->
+  <div id="page-contact" class="page">
+    <div class="pg-wrap">
+      <div class="pg-card">
+        <div id="ct-form-wrap">
+          <h2>Send a Message</h2>
+          <div class="form-group"><label>Name</label><input type="text" id="ct-name" placeholder="Your full name"/></div>
+          <div class="form-group"><label>Phone or Email</label><input type="text" id="ct-cont" placeholder="+961 or email"/></div>
+          <div class="form-group"><label>Subject</label><input type="text" id="ct-subj" placeholder="What is this about?"/></div>
+          <div class="form-group"><label>Message</label><textarea id="ct-msg" rows="5" placeholder="Write your message…"></textarea></div>
+          <button class="sub-btn" id="ct-btn" onclick="submitContact()">Send Message</button>
+        </div>
+        <div class="suc-box" id="ct-suc">
+          <div class="suc-ic">✅</div><h3>Message Sent!</h3>
+          <p>Thank you — we'll get back to you as soon as possible.</p>
+          <button class="rst-btn" onclick="resetContact()">Send Another</button>
+        </div>
+      </div>
+      <div class="pg-card">
+        <h2>Other Ways to Reach Us</h2>
+        <div class="abt-row"><div class="abt-ic">📞</div><div class="abt-txt"><strong>Phone</strong><span>+961 — — — —</span></div></div>
+        <div class="abt-row"><div class="abt-ic">✉️</div><div class="abt-txt"><strong>Email</strong><span>info@libraryyammine.com</span></div></div>
+        <div class="abt-row"><div class="abt-ic">📍</div><div class="abt-txt"><strong>Visit Us</strong><span>Lebanon</span></div></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<footer>
+  <div class="ft-logo">Library Yammine</div>
+  <div class="ft-sub">Est. Lebanon</div>
+  <div class="ft-links">
+    <button onclick="goHome()">Home</button>
+    <button onclick="navCat('all')">Shop</button>
+    <button onclick="showPg('about')">About</button>
+    <button onclick="showPg('contact')">Contact</button>
+  </div>
+  <div class="ft-copy">© 2025 Library Yammine. All rights reserved.</div>
+</footer>
+
+<!-- CART DRAWER -->
+<div class="cb" id="cb" onclick="closeCart()"></div>
+<div class="cd" id="cd">
+  <div class="cd-hd"><h2>Your Bag</h2><button class="cd-cl" onclick="closeCart()">✕</button></div>
+  <div class="cd-list" id="cd-list"></div>
+  <div class="cd-foot" id="cd-foot" style="display:none">
+    <div class="cd-tot"><span class="cd-tot-l">Total</span><span class="cd-tot-a" id="cd-tot">$0.00</span></div>
+    <button class="ck-btn">Proceed to Checkout</button>
+    <button class="cl-btn" onclick="clearCart()">Clear Bag</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════
+// CONFIG
+// ═══════════════════════
+const SHEET_API      = "https://script.google.com/macros/s/AKfycbzcRmLESKsO5SpkkJXdaP8XopAnaOcb9rFfYBcJz2UItLkJTrkcQST9XDSVHebVGRBw5w/exec";
+const PER_PAGE       = 20;
+const CACHE_KEY      = "ly_v3_data";
+const CACHE_TS_KEY   = "ly_v3_ts";
+const CACHE_TTL      = 5 * 60 * 1000; // 5 min
+
+// ═══════════════════════
+// STATE
+// ═══════════════════════
+let allItems   = [];
+let categories = [];
+let catCounts  = {};
+let dataReady  = false;
+let fetching   = false;
+let activePg   = 'home';
+let activeCat  = 'all';
+let curPage    = 1;
+let cart       = [];
+const pgCache  = {}; // "cat:page" -> item ids
+
+// ═══════════════════════
+// ICONS
+// ═══════════════════════
+const ICONS = {'Stationery':'✏️','Books':'📖','Art':'🎨','School':'🎒','Office & Gifts':'🎁','all':'📦'};
+const ci    = c => ICONS[c] || '📦';
+
+// ═══════════════════════
+// DATA FETCH
+// ═══════════════════════
+async function ensureData() {
+  if (dataReady) return true;
+  if (fetching) return new Promise(r => { const iv = setInterval(()=>{if(dataReady){clearInterval(iv);r(true);}},80); });
+  fetching = true;
+  // Try localStorage cache
+  try {
+    const c  = localStorage.getItem(CACHE_KEY);
+    const ts = parseInt(localStorage.getItem(CACHE_TS_KEY)||'0');
+    if (c && Date.now()-ts < CACHE_TTL) { allItems = JSON.parse(c); onData(); return true; }
+  } catch(e){}
+  // Demo fallback or real fetch
+  if (SHEET_API === "https://script.google.com/macros/s/AKfycbzcRmLESKsO5SpkkJXdaP8XopAnaOcb9rFfYBcJz2UItLkJTrkcQST9XDSVHebVGRBw5w/exec") { allItems = DEMO; onData(); return true; }
+  try {
+    const r = await fetch(SHEET_API);
+    allItems = await r.json();
+    localStorage.setItem(CACHE_KEY, JSON.stringify(allItems));
+    localStorage.setItem(CACHE_TS_KEY, String(Date.now()));
+    onData(); return true;
+  } catch(e) { allItems = DEMO; onData(); return true; }
+}
+
+function onData() {
+  dataReady = true; fetching = false;
+  const cm = {};
+  allItems.forEach(i => {
+    if (i.available===false||i.available==='FALSE') return;
+    const c = i.category||'Other';
+    cm[c] = (cm[c]||0)+1;
+  });
+  catCounts  = cm;
+  categories = Object.keys(cm).sort();
+  buildNavCats();
+  buildHomeCats();
+  renderHomeFeat();
+}
+
+// ═══════════════════════
+// NAV
+// ═══════════════════════
+function openNav()  { document.getElementById('nd').classList.add('open');  document.getElementById('nb').classList.add('open');  document.body.style.overflow='hidden'; }
+function closeNav() { document.getElementById('nd').classList.remove('open'); document.getElementById('nb').classList.remove('open'); document.body.style.overflow=''; }
+function navGo(pg)  { closeNav(); showPg(pg); }
+function navCat(c)  { closeNav(); showCatPg(c,1); }
+
+function buildNavCats() {
+  const el    = document.getElementById('nd-cats');
+  const total = allItems.filter(i=>i.available!==false&&i.available!=='FALSE').length;
+  let html = `<button class="nd-cat ${activeCat==='all'?'active':''}" id="nc-all" onclick="navCat('all')">
+    <div class="nd-cat-l"><span class="nd-cat-ic">📦</span><span class="nd-cat-n">All Items</span></div>
+    <span class="nd-cat-cnt">${total}</span></button>`;
+  categories.forEach(c => {
+    html += `<button class="nd-cat ${activeCat===c?'active':''}" id="nc-${eid(c)}" onclick="navCat('${ej(c)}')">
+      <div class="nd-cat-l"><span class="nd-cat-ic">${ci(c)}</span><span class="nd-cat-n">${e(c)}</span></div>
+      <span class="nd-cat-cnt">${catCounts[c]||0}</span></button>`;
+  });
+  el.innerHTML = html;
+}
+
+function setNavActive() {
+  document.querySelectorAll('.nd-link,.nd-cat').forEach(b=>b.classList.remove('active'));
+  if (activePg==='home')    { const x=document.getElementById('nl-home');    if(x) x.classList.add('active'); }
+  if (activePg==='about')   { const x=document.getElementById('nl-about');   if(x) x.classList.add('active'); }
+  if (activePg==='contact') { const x=document.getElementById('nl-contact'); if(x) x.classList.add('active'); }
+  if (activePg==='cat') {
+    const k = activeCat==='all' ? 'all' : activeCat;
+    const x = document.getElementById('nc-'+eid(k));
+    if(x) x.classList.add('active');
+  }
+}
+
+// ═══════════════════════
+// PAGE ROUTING
+// ═══════════════════════
+function showPg(pg) {
+  activePg = pg;
+  ['home','cat','about','contact'].forEach(p => {
+    const el = document.getElementById('page-'+p);
+    if(el) el.classList.toggle('active', p===pg);
+  });
+  setNavActive();
+  window.scrollTo({top:0});
+}
+
+function goHome() { activePg='home'; activeCat='all'; showPg('home'); if(!dataReady) ensureData(); }
+
+// ═══════════════════════
+// CATEGORY PAGE (lazy)
+// ═══════════════════════
+async function showCatPg(cat, page) {
+  activePg  = 'cat';
+  activeCat = cat;
+  curPage   = page;
+  showPg('cat');
+
+  document.getElementById('cat-title').textContent = cat==='all' ? 'All Items' : cat;
+  buildFilterChips();
+
+  const gridEl  = document.getElementById('cat-grid');
+  const loadEl  = document.getElementById('cat-load');
+  const emptyEl = document.getElementById('cat-empty');
+  const pagEl   = document.getElementById('pag-wrap');
+
+  gridEl.style.display  = 'none';
+  emptyEl.style.display = 'none';
+  pagEl.innerHTML       = '';
+
+  // Check page cache
+  const ck = cat+':'+page;
+  if (pgCache[ck] && dataReady) { loadEl.style.display='none'; renderFromCache(ck,gridEl,emptyEl,pagEl); return; }
+
+  loadEl.style.display = 'flex';
+  await ensureData();
+  loadEl.style.display = 'none';
+
+  const items = filtered(cat);
+  document.getElementById('cat-cnt').textContent = items.length===0 ? 'No items' : `${items.length} item${items.length!==1?'s':''}`;
+
+  if (!items.length) { emptyEl.style.display='block'; return; }
+
+  const total  = Math.ceil(items.length/PER_PAGE);
+  const pItems = items.slice((page-1)*PER_PAGE, page*PER_PAGE);
+  pgCache[ck]  = pItems.map(i=>i.id||i.name);
+
+  gridEl.innerHTML     = pItems.map(itemHTML).join('');
+  gridEl.style.display = 'grid';
+  lazyImgs();
+  if (total>1) pagEl.innerHTML = buildPag(page,total,cat);
+}
+
+function renderFromCache(ck, gridEl, emptyEl, pagEl) {
+  const ids    = new Set(pgCache[ck]);
+  const items  = allItems.filter(i=>ids.has(i.id||i.name));
+  const [cat,pg] = ck.split(':');
+  const total  = Math.ceil(filtered(cat).length/PER_PAGE);
+  const tcount = filtered(cat).length;
+  document.getElementById('cat-cnt').textContent = `${tcount} item${tcount!==1?'s':''}`;
+  if (!items.length) { emptyEl.style.display='block'; return; }
+  gridEl.innerHTML     = items.map(itemHTML).join('');
+  gridEl.style.display = 'grid';
+  lazyImgs();
+  if (total>1) pagEl.innerHTML = buildPag(parseInt(pg),total,cat);
+}
+
+function filtered(cat) {
+  return allItems.filter(i => {
+    if (i.available===false||i.available==='FALSE') return false;
+    if (cat!=='all' && i.category!==cat) return false;
+    return true;
+  });
+}
+
+function buildFilterChips() {
+  const s = document.getElementById('filt-strip');
+  s.innerHTML = ['all',...categories].map(c => {
+    const lbl = c==='all' ? 'All' : c;
+    return `<button class="fc ${c===activeCat?'active':''}" onclick="showCatPg('${ej(c)}',1)">${ci(c)} ${e(lbl)}</button>`;
+  }).join('');
+}
+
+function buildPag(cur,tot,cat) {
+  const pd = cur===1?'disabled':'', nd = cur===tot?'disabled':'';
+  const range = pagRange(cur,tot);
+  const nums  = range.map(n => n==='…'
+    ? `<span class="pn dots">…</span>`
+    : `<button class="pn ${n===cur?'active':''}" onclick="showCatPg('${ej(cat)}',${n})">${n}</button>`
+  ).join('');
+  return `<div class="pag">
+    <button class="pnav" ${pd} onclick="showCatPg('${ej(cat)}',${cur-1})">← Prev</button>
+    ${nums}
+    <button class="pnav" ${nd} onclick="showCatPg('${ej(cat)}',${cur+1})">Next →</button>
+  </div>`;
+}
+
+function pagRange(cur,tot) {
+  if(tot<=7) return Array.from({length:tot},(_,i)=>i+1);
+  if(cur<=4)      return [1,2,3,4,5,'…',tot];
+  if(cur>=tot-3)  return [1,'…',tot-4,tot-3,tot-2,tot-1,tot];
+  return [1,'…',cur-1,cur,cur+1,'…',tot];
+}
+
+// ═══════════════════════
+// HOME RENDERS
+// ═══════════════════════
+function buildHomeCats() {
+  const s = document.getElementById('home-cats');
+  s.innerHTML = categories.map(c => `
+    <div class="cat-pill" onclick="navCat('${ej(c)}')">
+      <div class="cp-ic">${ci(c)}</div>
+      <div class="cp-nm">${e(c)}</div>
+    </div>`).join('');
+}
+
+function renderHomeFeat() {
+  let feat = allItems.filter(i=>(i.featured===true||i.featured==='TRUE'||i.featured==='true')&&i.available!==false&&i.available!=='FALSE');
+  if (!feat.length) feat = allItems.filter(i=>i.available!==false&&i.available!=='FALSE').slice(0,8);
+  document.getElementById('home-sk').style.display  = 'none';
+  const g = document.getElementById('home-grid');
+  g.style.display  = 'grid';
+  g.innerHTML      = feat.map(itemHTML).join('');
+  lazyImgs();
+}
+
+// ═══════════════════════
+// ITEM CARD
+// ═══════════════════════
+function itemHTML(item) {
+  const nm  = e(item.name||'Item');
+  const cat = e(item.category||'');
+  const pr  = parseFloat(item.price)||0;
+  const img = item.image_url||'';
+  const iid = item.id||item.name||'';
+  const inC = cart.some(c=>c.id===iid);
+  const feat= item.featured===true||item.featured==='TRUE'||item.featured==='true';
+  const payload = JSON.stringify({id:iid,name:item.name||'',price:pr,category:item.category||'',image_url:img});
+
+  const imgPart = img
+    ? `<img data-src="${ea(img)}" src="" alt="${nm}" class="li" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling&&(this.nextElementSibling.style.display='flex')" /><div class="ic-ph" style="display:none">${ci(item.category)}</div>`
+    : `<div class="ic-ph">${ci(item.category)}</div>`;
+
+  return `<div class="ic">
+    <div class="ic-img">
+      ${feat?'<div class="feat-badge">Featured</div>':''}
+      ${imgPart}
+    </div>
+    <div class="ic-body">
+      <div class="ic-cat">${cat}</div>
+      <div class="ic-name">${nm}</div>
+      <div class="ic-foot">
+        <span class="ic-price">$${pr.toFixed(2)}</span>
+        <button class="add-btn ${inC?'added':''}" onclick='addToCart(${payload})'>${inC?'✓':'+'}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════
+// LAZY IMAGES
+// ═══════════════════════
+let lobs = null;
+function lazyImgs() {
+  if (!('IntersectionObserver' in window)) {
+    document.querySelectorAll('img.li[data-src]').forEach(img=>{ img.src=img.dataset.src; img.removeAttribute('data-src'); });
+    return;
+  }
+  if (lobs) lobs.disconnect();
+  lobs = new IntersectionObserver((entries,obs) => {
+    entries.forEach(en => {
+      if (en.isIntersecting) {
+        const img = en.target;
+        if (img.dataset.src) { img.src=img.dataset.src; img.removeAttribute('data-src'); }
+        obs.unobserve(img);
+      }
+    });
+  },{rootMargin:'120px'});
+  document.querySelectorAll('img.li[data-src]').forEach(img=>lobs.observe(img));
+}
+
+// ═══════════════════════
+// SEARCH
+// ═══════════════════════
+function openSearch() {
+  document.getElementById('srch-ov').classList.add('open');
+  document.body.style.overflow='hidden';
+  setTimeout(()=>document.getElementById('srch-in').focus(),80);
+}
+function closeSearch() {
+  document.getElementById('srch-ov').classList.remove('open');
+  document.body.style.overflow='';
+  document.getElementById('srch-in').value='';
+  document.getElementById('srch-area').innerHTML='<div class="srch-msg">Start typing to search…</div>';
+}
+let st;
+function onSrch() { clearTimeout(st); st=setTimeout(doSearch,160); }
+async function doSearch() {
+  const q   = document.getElementById('srch-in').value.trim().toLowerCase();
+  const area= document.getElementById('srch-area');
+  if (!q) { area.innerHTML='<div class="srch-msg">Start typing to search…</div>'; return; }
+  if (!dataReady) { area.innerHTML='<div class="srch-msg">Loading…</div>'; await ensureData(); }
+  const res = allItems.filter(i=>
+    i.available!==false&&i.available!=='FALSE'&&
+    ((i.name||'').toLowerCase().includes(q)||(i.category||'').toLowerCase().includes(q)||(i.description||'').toLowerCase().includes(q))
+  ).slice(0,25);
+  if (!res.length) { area.innerHTML=`<div class="srch-msg">No results for "${e(q)}"</div>`; return; }
+  area.innerHTML = res.map(item => {
+    const iph = item.image_url
+      ? `<img class="srch-img" src="${ea(item.image_url)}" onerror="this.outerHTML='<div class=\\'srch-img-ph\\'>${ci(item.category)}</div>'"/>`
+      : `<div class="srch-img-ph">${ci(item.category)}</div>`;
+    const payload = JSON.stringify({id:item.id||item.name,name:item.name||'',price:parseFloat(item.price)||0,category:item.category||'',image_url:item.image_url||''});
+    return `<div class="srch-item" onclick='srchAdd(${payload})'>${iph}
+      <div class="srch-info"><div class="srch-name">${e(item.name||'')}</div><div class="srch-cat">${e(item.category||'')}</div></div>
+      <div class="srch-price">$${(parseFloat(item.price)||0).toFixed(2)}</div>
+    </div>`;
+  }).join('');
+}
+function srchAdd(item) { addToCart(item); closeSearch(); }
+
+// ═══════════════════════
+// CART
+// ═══════════════════════
+function addToCart(item) {
+  const ex = cart.find(c=>c.id===item.id);
+  if (ex) ex.qty++; else cart.push({...item,qty:1});
+  updateBadge(); renderCart(); showToast(e(item.name||'Item')+' added ✓'); refreshBtns();
+}
+function chQty(id,d) {
+  const idx = cart.findIndex(c=>c.id===id);
+  if(idx===-1) return;
+  cart[idx].qty=Math.max(0,cart[idx].qty+d);
+  if(cart[idx].qty===0) cart.splice(idx,1);
+  updateBadge(); renderCart(); refreshBtns();
+}
+function clearCart() { cart=[]; updateBadge(); renderCart(); refreshBtns(); }
+
+function refreshBtns() {
+  document.querySelectorAll('.add-btn').forEach(btn => {
+    try {
+      const m = (btn.getAttribute('onclick')||'').match(/addToCart\((.+)\)$/);
+      if(!m) return;
+      const obj = JSON.parse(m[1]);
+      const inC = cart.some(c=>c.id===obj.id);
+      btn.classList.toggle('added',inC);
+      btn.textContent = inC?'✓':'+';
+    }catch(e){}
+  });
+}
+
+function updateBadge() {
+  const n = cart.reduce((s,i)=>s+i.qty,0);
+  const b = document.getElementById('cart-badge');
+  b.textContent = n>99?'99+':String(n);
+  b.classList.toggle('show',n>0);
+}
+
+function openCart()  { renderCart(); document.getElementById('cb').classList.add('open'); document.getElementById('cd').classList.add('open'); document.body.style.overflow='hidden'; }
+function closeCart() { document.getElementById('cb').classList.remove('open'); document.getElementById('cd').classList.remove('open'); document.body.style.overflow=''; }
+
+function renderCart() {
+  const list = document.getElementById('cd-list');
+  const foot = document.getElementById('cd-foot');
+  if (!cart.length) {
+    list.innerHTML=`<div class="cart-empty"><div class="cart-empty-ic">🛍️</div><p>Your bag is empty</p><button class="cart-browse" onclick="closeCart();navCat('all')">Browse Collection</button></div>`;
+    foot.style.display='none'; return;
+  }
+  foot.style.display='block';
+  const total = cart.reduce((s,i)=>s+i.price*i.qty,0);
+  document.getElementById('cd-tot').textContent='$'+total.toFixed(2);
+  list.innerHTML = cart.map(item => {
+    const ip = item.image_url
+      ? `<img class="ci-img" src="${ea(item.image_url)}" onerror="this.outerHTML='<div class=\\'ci-ph\\'>${ci(item.category)}</div>'"/>`
+      : `<div class="ci-ph">${ci(item.category)}</div>`;
+    return `<div class="ci">${ip}
+      <div class="ci-inf"><div class="ci-nm">${e(item.name)}</div><div class="ci-ct">${e(item.category)}</div><div class="ci-pr">$${(item.price*item.qty).toFixed(2)}</div></div>
+      <div class="qty-row">
+        <button class="qb dl" onclick="chQty('${ej(item.id)}',-999)">🗑</button>
+        <button class="qb" onclick="chQty('${ej(item.id)}',-1)">−</button>
+        <span class="qn">${item.qty}</span>
+        <button class="qb" onclick="chQty('${ej(item.id)}',1)">+</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════
+// CONTACT
+// ═══════════════════════
+function submitContact() {
+  if(!document.getElementById('ct-name').value.trim()||!document.getElementById('ct-cont').value.trim()||!document.getElementById('ct-msg').value.trim()){showToast('Please fill all required fields');return;}
+  const btn=document.getElementById('ct-btn'); btn.disabled=true; btn.textContent='Sending…';
+  setTimeout(()=>{ btn.disabled=false; btn.textContent='Send Message'; document.getElementById('ct-form-wrap').style.display='none'; document.getElementById('ct-suc').classList.add('show'); },900);
+}
+function resetContact() {
+  ['ct-name','ct-cont','ct-subj','ct-msg'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('ct-suc').classList.remove('show');
+  document.getElementById('ct-form-wrap').style.display='block';
+}
+
+// ═══════════════════════
+// TOAST
+// ═══════════════════════
+let tt;
+function showToast(msg) {
+  const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show');
+  clearTimeout(tt); tt=setTimeout(()=>el.classList.remove('show'),2000);
+}
+
+// ═══════════════════════
+// HELPERS
+// ═══════════════════════
+function e(s)  { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function ea(s) { return String(s||'').replace(/"/g,'&quot;'); }
+function ej(s) { return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+function eid(s){ return String(s||'').replace(/[^a-zA-Z0-9]/g,'_'); }
+
+// ═══════════════════════
+// DEMO DATA (50 items)
+// ═══════════════════════
+const DEMO=[
+  {id:'1',name:'Premium Hardcover Notebook A5',category:'Stationery',price:4.50,featured:true,available:true,image_url:'',description:''},
+  {id:'2',name:'Softcover Journal B5',category:'Stationery',price:3.00,featured:true,available:true,image_url:'',description:''},
+  {id:'3',name:'Fountain Pen Set',category:'Stationery',price:12.00,featured:true,available:true,image_url:'',description:''},
+  {id:'4',name:'Ballpoint Pens 10-Pack',category:'Stationery',price:2.00,featured:false,available:true,image_url:'',description:''},
+  {id:'5',name:'Mechanical Pencil 0.5mm',category:'Stationery',price:3.50,featured:false,available:true,image_url:'',description:''},
+  {id:'6',name:'Highlighters 6-Color Set',category:'Stationery',price:2.50,featured:false,available:true,image_url:'',description:''},
+  {id:'7',name:'Sticky Notes 5-Pack',category:'Stationery',price:1.50,featured:false,available:true,image_url:'',description:''},
+  {id:'8',name:'Correction Tape 2-Pack',category:'Stationery',price:1.80,featured:false,available:true,image_url:'',description:''},
+  {id:'9',name:'Stapler & Staples Bundle',category:'Stationery',price:4.00,featured:false,available:true,image_url:'',description:''},
+  {id:'10',name:'Scissors Set — 2 Sizes',category:'Stationery',price:3.00,featured:false,available:true,image_url:'',description:''},
+  {id:'11',name:'World Atlas 2024 Edition',category:'Books',price:18.50,featured:true,available:true,image_url:'',description:''},
+  {id:'12',name:'Arabic Grammar Workbook',category:'Books',price:7.00,featured:true,available:true,image_url:'',description:''},
+  {id:'13',name:"Children's Story Bundle — 5 Books",category:'Books',price:15.00,featured:true,available:true,image_url:'',description:''},
+  {id:'14',name:'Science Encyclopedia Illustrated',category:'Books',price:22.00,featured:false,available:true,image_url:'',description:''},
+  {id:'15',name:'History of Lebanon',category:'Books',price:14.00,featured:false,available:true,image_url:'',description:''},
+  {id:'16',name:'Mathematics Textbook Grade 9',category:'Books',price:9.00,featured:false,available:true,image_url:'',description:''},
+  {id:'17',name:'English Grammar in Use',category:'Books',price:12.00,featured:true,available:true,image_url:'',description:''},
+  {id:'18',name:'French for Beginners',category:'Books',price:10.00,featured:false,available:true,image_url:'',description:''},
+  {id:'19',name:'Quran — Large Print Edition',category:'Books',price:20.00,featured:false,available:true,image_url:'',description:''},
+  {id:'20',name:'Bible — New Translation',category:'Books',price:16.00,featured:false,available:true,image_url:'',description:''},
+  {id:'21',name:'Watercolor Set — 24 Colors',category:'Art',price:8.00,featured:true,available:true,image_url:'',description:''},
+  {id:'22',name:'Colored Pencils — 36 Pack',category:'Art',price:6.00,featured:true,available:true,image_url:'',description:''},
+  {id:'23',name:'Sketching Charcoal Kit',category:'Art',price:5.50,featured:false,available:true,image_url:'',description:''},
+  {id:'24',name:'Acrylic Paint Set — 12 Tubes',category:'Art',price:14.00,featured:false,available:true,image_url:'',description:''},
+  {id:'25',name:'Oil Pastel Crayons 50-Pack',category:'Art',price:7.00,featured:false,available:true,image_url:'',description:''},
+  {id:'26',name:'Drawing Pad A3 — 50 Sheets',category:'Art',price:4.00,featured:false,available:true,image_url:'',description:''},
+  {id:'27',name:'Canvas Boards — Set of 5',category:'Art',price:9.00,featured:true,available:true,image_url:'',description:''},
+  {id:'28',name:'Paint Brushes Set — 15 Piece',category:'Art',price:6.50,featured:false,available:true,image_url:'',description:''},
+  {id:'29',name:'Palette Knife Set — 5 Piece',category:'Art',price:4.50,featured:false,available:true,image_url:'',description:''},
+  {id:'30',name:'Art Eraser & Sharpener Kit',category:'Art',price:2.00,featured:false,available:true,image_url:'',description:''},
+  {id:'31',name:'Geometry & Math Set',category:'School',price:3.00,featured:false,available:true,image_url:'',description:''},
+  {id:'32',name:'Scientific Calculator',category:'School',price:8.50,featured:true,available:true,image_url:'',description:''},
+  {id:'33',name:'Backpack 20L — Black',category:'School',price:24.00,featured:true,available:true,image_url:'',description:''},
+  {id:'34',name:'Backpack 20L — Navy Blue',category:'School',price:24.00,featured:false,available:true,image_url:'',description:''},
+  {id:'35',name:'Pencil Case — Large',category:'School',price:3.50,featured:false,available:true,image_url:'',description:''},
+  {id:'36',name:'Binder A4 — 2 Ring',category:'School',price:4.00,featured:false,available:true,image_url:'',description:''},
+  {id:'37',name:'Index Dividers — 10 Tabs',category:'School',price:1.50,featured:false,available:true,image_url:'',description:''},
+  {id:'38',name:'Composition Notebooks 3-Pack',category:'School',price:5.00,featured:false,available:true,image_url:'',description:''},
+  {id:'39',name:'Plastic Folders 10-Pack',category:'School',price:2.50,featured:false,available:true,image_url:'',description:''},
+  {id:'40',name:'Label Stickers — 200 Pack',category:'School',price:1.80,featured:false,available:true,image_url:'',description:''},
+  {id:'41',name:'Desk Organizer — Bamboo',category:'Office & Gifts',price:9.00,featured:true,available:true,image_url:'',description:''},
+  {id:'42',name:'Whiteboard Markers 8-Color',category:'Office & Gifts',price:3.50,featured:false,available:true,image_url:'',description:''},
+  {id:'43',name:'File Folders — 10-Pack',category:'Office & Gifts',price:4.00,featured:false,available:true,image_url:'',description:''},
+  {id:'44',name:'Tape Dispenser + 3 Rolls',category:'Office & Gifts',price:3.00,featured:false,available:true,image_url:'',description:''},
+  {id:'45',name:'Business Card Holder',category:'Office & Gifts',price:5.00,featured:false,available:true,image_url:'',description:''},
+  {id:'46',name:'Mini Gift Box Set — 6 Pack',category:'Office & Gifts',price:11.00,featured:true,available:true,image_url:'',description:''},
+  {id:'47',name:'Gift Wrap Kit — Deluxe',category:'Office & Gifts',price:5.50,featured:true,available:true,image_url:'',description:''},
+  {id:'48',name:'Greeting Cards — 12 Pack',category:'Office & Gifts',price:4.00,featured:false,available:true,image_url:'',description:''},
+  {id:'49',name:'Wooden Photo Frames — Set of 3',category:'Office & Gifts',price:13.00,featured:false,available:true,image_url:'',description:''},
+  {id:'50',name:'Thank You Card Box — 24 Pack',category:'Office & Gifts',price:6.00,featured:false,available:true,image_url:'',description:''},
+];
+
+// ═══════════════════════
+// INIT — load home data immediately
+// ═══════════════════════
+ensureData();
+</script>
+</body>
+</html>

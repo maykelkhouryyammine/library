@@ -721,6 +721,7 @@
    CONFIG
    ============================================================ */
 const SHEET_API    = "https://script.google.com/macros/s/AKfycbzcRmLESKsO5SpkkJXdaP8XopAnaOcb9rFfYBcJz2UItLkJTrkcQST9XDSVHebVGRBw5w/exec";
+const FEEDBACK_API = "https://script.google.com/macros/s/AKfycbzX5UGB92xjnAzzb2WyWyAyDJsIvgUgKPKLlgcQf5wFPvkLRPnb-j2NNpO64oLCruY2/exec";
 const PER_PAGE     = 20;
 const CACHE_KEY    = "ly_v10_data";
 const CACHE_TS_KEY = "ly_v10_ts";
@@ -906,25 +907,26 @@ function wireEvents() {
   window.addEventListener("scroll", () => {
     $("backToTop").classList.toggle("visible", window.scrollY > 300);
   }, { passive: true });
+  
   // Global listener for all "add to cart" buttons (prevents double-add)
-document.body.addEventListener('click', function(e) {
-  const addBtn = e.target.closest('.add-button');
-  if (!addBtn) return;
-  e.preventDefault();  // Stop any potential double events
-  e.stopPropagation();
-  
-  const itemId = addBtn.dataset.itemId;
-  const item = allItems.find(i => i.id === itemId);
-  if (!item) return;
-  
-  addToCart({
-    id:        item.id,
-    name:      item.name,
-    category:  item.category,
-    price:     item.salePrice ?? item.price,
-    image_url: item.image_url
+  document.body.addEventListener('click', function(e) {
+    const addBtn = e.target.closest('.add-button');
+    if (!addBtn) return;
+    e.preventDefault();  // Stop any potential double events
+    e.stopPropagation();
+    
+    const itemId = addBtn.dataset.itemId;
+    const item = allItems.find(i => i.id === itemId);
+    if (!item) return;
+    
+    addToCart({
+      id:        item.id,
+      name:      item.name,
+      category:  item.category,
+      price:     item.salePrice ?? item.price,
+      image_url: item.image_url
+    });
   });
-});
 }
 
 /* ============================================================
@@ -1026,7 +1028,6 @@ function renderFeatured() {
   
   skel.style.display = "none";
   grid.style.display = "grid";
-  // FIX: Initialize lazy images after grid is visible
   initLazyImages(grid);
 }
 
@@ -1069,7 +1070,6 @@ function renderCategoryPage() {
  
   skel.style.display = "none";
   grid.style.display = "grid";
-  // FIX: Initialize lazy images after grid is visible
   initLazyImages(grid);
 
   if (totalPages > 1) {
@@ -1161,8 +1161,6 @@ function itemCardHTML(item) {
     </div>`;
 }
 
-
-
 /* ============================================================
    LAZY IMAGES  (IntersectionObserver + CSS fade)
    ============================================================ */
@@ -1238,7 +1236,6 @@ function updateCartBadge() {
 }
 
 function openCart() {
-  // Add loading state as requested
   $("cartItemsList").innerHTML = '<div style="text-align:center; padding:40px; color:var(--gray-text);">Loading your bag...</div>';
   renderCartUI();
   $("cartOverlay").classList.add("open");
@@ -1269,7 +1266,6 @@ function renderCartUI() {
   }
 
   footer.style.display = "block";
-  // FIX: Safe price handling
   const total = cart.reduce((s,i) => {
     const price = i.price || 0;
     const qty = i.qty || 0;
@@ -1277,14 +1273,12 @@ function renderCartUI() {
   }, 0);
   $("cartTotal").textContent = "$" + total.toFixed(2);
 
-  // Buttons use data-action + data-id — delegation in wireEvents() handles them
   list.innerHTML = cart.map(item => {
     const imgHtml = item.image_url
       ? `<img src="${escAttr(item.image_url)}" alt="${escHTML(item.name)}"
               style="width:100%;height:100%;object-fit:cover;display:block;"
               onerror="this.style.display='none'">`
       : "📄";
-    // FIX: Safe price and quantity
     const price = item.price || 0;
     const qty = item.qty || 0;
     const itemTotal = (price * qty).toFixed(2);
@@ -1366,7 +1360,6 @@ function performSearch() {
   ).slice(0, 30);
 
   if (!matched.length) {
-    // FIX: More friendly empty search message
     area.innerHTML = `<div class="search-msg">✨ No items match "<strong>${escHTML(q)}</strong>"<br>Try different keywords.</div>`;
     return;
   }
@@ -1399,16 +1392,54 @@ function performSearch() {
 }
 
 /* ============================================================
-   CONTACT FORM
+   CONTACT FORM — UPDATED WITH FEEDBACK API
    ============================================================ */
-function submitContact() {
+async function submitContact() {
   const name = $("contactName").value.trim();
   const info = $("contactInfo").value.trim();
   const msg  = $("contactMsg").value.trim();
-  if (!name || !info || !msg) { showToast("Please fill in all fields"); return; }
-  $("contactForm").style.display    = "none";
-  $("contactSuccess").style.display = "block";
+  
+  if (!name || !info || !msg) { 
+    showToast("Please fill in all fields"); 
+    return; 
+  }
+
+  const btn = $("contactSubmitBtn");
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Sending...";
+
+  try {
+    const response = await fetch(FEEDBACK_API, {
+      method: 'POST',
+      body: JSON.stringify({
+        name: name,
+        contact: info,
+        message: msg
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      $("contactForm").style.display = "none";
+      $("contactSuccess").style.display = "block";
+      // Clear form
+      $("contactName").value = "";
+      $("contactInfo").value = "";
+      $("contactMsg").value = "";
+    } else {
+      showToast("Error sending message. Please try again.");
+    }
+  } catch(err) {
+    console.error("Failed to send message:", err);
+    showToast("Network error. Please check your connection.");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
 }
+
 function resetContact() {
   ["contactName","contactInfo","contactMsg"].forEach(id => $(id).value = "");
   $("contactForm").style.display    = "block";
@@ -1467,4 +1498,3 @@ function debounce(fn, ms) {
 </script>
 </body>
 </html>
-

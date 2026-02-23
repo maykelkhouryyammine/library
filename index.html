@@ -6,7 +6,6 @@
   <meta name="theme-color" content="#1e3a8a"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
-  <!-- Cache busting – always load latest version -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -14,7 +13,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..700&display=swap" rel="stylesheet"/>
   <style>
-    /* ... (keep all your existing CSS exactly as is – unchanged) ... */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
@@ -32,12 +30,8 @@
       --nav-w:        280px;
     }
 
-    html {
-      scroll-behavior: smooth;
-      height: 100%;
-    }
+    html { scroll-behavior: smooth; height: 100%; }
 
-    /* ── FULL PAGE BACKGROUND ── */
     body {
       font-family: var(--font-sans);
       background:
@@ -121,7 +115,7 @@
     }
     .nav-footer { padding: 14px 16px; border-top: 1px solid var(--gray-border); font-size: 10px; color: var(--gray-text); flex-shrink: 0; }
 
-    /* ── HEADER (frosted glass) ── */
+    /* ── HEADER ── */
     #header {
       position: sticky; top: 0; z-index: 200;
       background: rgba(255,255,255,0.93);
@@ -199,7 +193,7 @@
     .page.active { display: block; animation: fadeIn 0.18s ease; }
     @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
 
-    /* ── HERO (glass card on dark bg) ── */
+    /* ── HERO ── */
     .hero {
       margin: 12px 12px 0; border-radius: var(--radius);
       padding: 40px 24px; min-height: 200px;
@@ -445,7 +439,6 @@
     .cart-item-category { font-size: 11px; color: var(--gray-text); margin-top: 1px; }
     .cart-item-price { font-size: 13px; font-weight: 700; color: var(--black); margin-top: 3px; }
     .cart-qty { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
-    /* qty buttons – delegation handles clicks, NO inline onclick */
     .qty-btn {
       width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--gray-border);
       background: var(--white); display: flex; align-items: center; justify-content: center;
@@ -459,7 +452,6 @@
     .cart-footer { padding: 16px 18px; border-top: 1px solid var(--gray-border); background: var(--white); flex-shrink: 0; }
     .cart-total { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; font-weight: 700; font-size: 17px; color: var(--black); }
 
-    /* ── WhatsApp btn – BLACK ── */
     .whatsapp-btn {
       width: 100%; padding: 13px; background: var(--black); border: none;
       border-radius: 40px; font-size: 14px; font-weight: 700; cursor: pointer;
@@ -726,7 +718,7 @@ const PER_PAGE     = 20;
 const CACHE_KEY    = "ly_v10_data";
 const CACHE_TS_KEY = "ly_v10_ts";
 const CACHE_TTL    = 5 * 60 * 1000;
-const WHATSAPP_NUM = "96176419154"; // +961 76 419 154
+const WHATSAPP_NUM = "96176419154";
 
 /* ============================================================
    STATE
@@ -742,7 +734,6 @@ let sortOption     = "default";
 let saleOnly       = false;
 let cart           = [];
 
-/* shorthand */
 const $ = id => document.getElementById(id);
 
 /* ============================================================
@@ -752,12 +743,11 @@ wireEvents();
 loadData();
 
 /* ============================================================
-   DATA LOADING  (stale-while-revalidate for instant display)
+   DATA LOADING
    ============================================================ */
 async function loadData() {
   let hasCached = false;
 
-  // ① Serve cache immediately (even if stale)
   try {
     const raw = localStorage.getItem(CACHE_KEY);
     if (raw) {
@@ -771,7 +761,6 @@ async function loadData() {
     }
   } catch(_) {}
 
-  // ② Always fetch fresh in background
   const ts      = parseInt(localStorage.getItem(CACHE_TS_KEY) || "0");
   const isStale = Date.now() - ts > CACHE_TTL;
 
@@ -839,10 +828,9 @@ function computeCategories() {
 }
 
 /* ============================================================
-   EVENT WIRING  — zero inline onclick in HTML
+   EVENT WIRING
    ============================================================ */
 function wireEvents() {
-  // Nav
   $("hamburgerBtn").addEventListener("click", openNav);
   $("navCloseBtn").addEventListener("click",  closeNav);
   $("navOverlay").addEventListener("click",   closeNav);
@@ -850,22 +838,18 @@ function wireEvents() {
   $("navAbout").addEventListener("click",   () => { closeNav(); showPage("about"); });
   $("navContact").addEventListener("click", () => { closeNav(); showPage("contact"); });
 
-  // Logo
   $("logoBtn").addEventListener("click", goHome);
 
-  // Search
   $("searchOpenBtn").addEventListener("click",  openSearch);
   $("searchCancelBtn").addEventListener("click", closeSearch);
   $("searchInput").addEventListener("input", debounce(performSearch, 220));
 
-  // Cart open / close
   $("cartOpenBtn").addEventListener("click",  openCart);
   $("cartCloseBtn").addEventListener("click", closeCart);
   $("cartOverlay").addEventListener("click",  closeCart);
   $("clearCartBtn").addEventListener("click", clearCart);
   $("whatsappOrderBtn").addEventListener("click", orderWhatsApp);
 
-  // ── Cart item buttons: EVENT DELEGATION (fixes mobile + re-render) ──
   $("cartItemsList").addEventListener("click", function(e) {
     const btn = e.target.closest("[data-action]");
     if (!btn) return;
@@ -877,11 +861,9 @@ function wireEvents() {
     if (action === "remove") removeItem(id);
   });
 
-  // Home
   $("heroBrowseBtn").addEventListener("click", () => showCategory("all", 1));
   $("viewAllBtn").addEventListener("click",    () => showCategory("all", 1));
 
-  // Category
   $("catHomeBtn").addEventListener("click", goHome);
   $("sortSelect").addEventListener("change", e => {
     sortOption = e.target.value; currentPageNum = 1; renderCategoryPage();
@@ -890,35 +872,28 @@ function wireEvents() {
     saleOnly = e.target.checked; currentPageNum = 1; renderCategoryPage();
   });
 
-  // Contact
   $("contactSubmitBtn").addEventListener("click", submitContact);
   $("contactResetBtn").addEventListener("click",  resetContact);
 
-  // Back to top
   $("backToTop").addEventListener("click", () => window.scrollTo({ top:0, behavior:"smooth" }));
 
-  // Footer
   $("footerHome").addEventListener("click",    goHome);
   $("footerShop").addEventListener("click",    () => showCategory("all", 1));
   $("footerAbout").addEventListener("click",   () => showPage("about"));
   $("footerContact").addEventListener("click", () => showPage("contact"));
 
-  // Scroll → back-to-top
   window.addEventListener("scroll", () => {
     $("backToTop").classList.toggle("visible", window.scrollY > 300);
   }, { passive: true });
-  
-  // Global listener for all "add to cart" buttons (prevents double-add)
+
   document.body.addEventListener('click', function(e) {
     const addBtn = e.target.closest('.add-button');
     if (!addBtn) return;
-    e.preventDefault();  // Stop any potential double events
+    e.preventDefault();
     e.stopPropagation();
-    
     const itemId = addBtn.dataset.itemId;
     const item = allItems.find(i => i.id === itemId);
     if (!item) return;
-    
     addToCart({
       id:        item.id,
       name:      item.name,
@@ -980,7 +955,7 @@ function updateNavHighlight() {
 }
 
 /* ============================================================
-   NAV CATEGORIES  (event delegation)
+   NAV CATEGORIES
    ============================================================ */
 function renderNavCategories() {
   const nav   = $("navCats");
@@ -1025,10 +1000,13 @@ function renderFeatured() {
   if (!featured.length) featured = allItems.filter(i => i.available).slice(0, 8);
 
   grid.innerHTML = featured.map(itemCardHTML).join("");
-  
+
   skel.style.display = "none";
   grid.style.display = "grid";
-  initLazyImages(grid);
+
+  // FIX: Use requestAnimationFrame so the grid is painted before we check
+  // which images are already in the viewport.
+  requestAnimationFrame(() => initLazyImages(grid));
 }
 
 /* ============================================================
@@ -1067,10 +1045,11 @@ function renderCategoryPage() {
   const pageItems  = items.slice(start, start + PER_PAGE);
 
   grid.innerHTML     = pageItems.map(itemCardHTML).join("");
- 
+
   skel.style.display = "none";
   grid.style.display = "grid";
-  initLazyImages(grid);
+
+  requestAnimationFrame(() => initLazyImages(grid));
 
   if (totalPages > 1) {
     pagCon.innerHTML = buildPagination(totalPages);
@@ -1121,7 +1100,7 @@ function wirePagination(container) {
 }
 
 /* ============================================================
-   ITEM CARD  (lazy image with smooth fade-in)
+   ITEM CARD
    ============================================================ */
 function itemCardHTML(item) {
   const name     = escHTML(item.name);
@@ -1162,20 +1141,34 @@ function itemCardHTML(item) {
 }
 
 /* ============================================================
-   LAZY IMAGES  (IntersectionObserver + CSS fade)
+   LAZY IMAGES — FIX: immediately load images already in viewport
    ============================================================ */
 let lazyObserver;
 function initLazyImages(container) {
+  const imgs = Array.from(container.querySelectorAll("img.lazy[data-src]"));
   if (!("IntersectionObserver" in window)) {
-    container.querySelectorAll("img.lazy[data-src]").forEach(loadImg);
+    imgs.forEach(loadImg);
     return;
   }
   if (!lazyObserver) {
     lazyObserver = new IntersectionObserver(entries => {
-      entries.forEach(e => { if (e.isIntersecting) { loadImg(e.target); lazyObserver.unobserve(e.target); } });
-    }, { rootMargin:"300px" });
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          loadImg(e.target);
+          lazyObserver.unobserve(e.target);
+        }
+      });
+    }, { rootMargin: "300px" });
   }
-  container.querySelectorAll("img.lazy[data-src]").forEach(img => lazyObserver.observe(img));
+  imgs.forEach(img => {
+    // If already in (or very near) the viewport, load right away
+    const rect = img.getBoundingClientRect();
+    if (rect.top < window.innerHeight + 400) {
+      loadImg(img);
+    } else {
+      lazyObserver.observe(img);
+    }
+  });
 }
 
 function loadImg(img) {
@@ -1183,7 +1176,7 @@ function loadImg(img) {
   const src = img.dataset.src;
   img.removeAttribute("data-src");
   img.src = src;
-  img.onload  = () => img.classList.add("loaded");      // triggers CSS opacity: 1
+  img.onload  = () => img.classList.add("loaded");
   img.onerror = () => {
     img.style.display = "none";
     const fb = img.nextElementSibling;
@@ -1309,7 +1302,7 @@ function refreshAddButtonState() {
 }
 
 /* ============================================================
-   WHATSAPP ORDER  – black button, formatted message
+   WHATSAPP ORDER
    ============================================================ */
 function orderWhatsApp() {
   if (!cart.length) return;
@@ -1323,7 +1316,7 @@ function orderWhatsApp() {
     const qty = i.qty || 0;
     return `• ${i.name} × ${qty} — $${(price * qty).toFixed(2)}`;
   }).join("\n");
-  const msg   = encodeURIComponent(
+  const msg = encodeURIComponent(
     `Hello Library Zgharta Zawyeh! 📚\nI'd like to order:\n\n${lines}\n\n*Total: $${total.toFixed(2)}*`
   );
   window.open(`https://wa.me/${WHATSAPP_NUM}?text=${msg}`, "_blank");
@@ -1392,16 +1385,19 @@ function performSearch() {
 }
 
 /* ============================================================
-   CONTACT FORM — UPDATED WITH FEEDBACK API
+   CONTACT FORM
+   FIX: use mode:'no-cors' to bypass Google Apps Script CORS restriction.
+   NOTE: also rename your Google Sheet tab from "Message" → "Messages"
+         to match the Apps Script: getSheetByName("Messages")
    ============================================================ */
 async function submitContact() {
   const name = $("contactName").value.trim();
   const info = $("contactInfo").value.trim();
   const msg  = $("contactMsg").value.trim();
-  
-  if (!name || !info || !msg) { 
-    showToast("Please fill in all fields"); 
-    return; 
+
+  if (!name || !info || !msg) {
+    showToast("Please fill in all fields");
+    return;
   }
 
   const btn = $("contactSubmitBtn");
@@ -1410,32 +1406,30 @@ async function submitContact() {
   btn.textContent = "Sending...";
 
   try {
-    const response = await fetch(FEEDBACK_API, {
+    // Send as URLSearchParams (form-encoded). This works with no-cors and
+    // Google Apps Script reads it via e.parameter.name / e.parameter.contact etc.
+    const params = new URLSearchParams();
+    params.append("name",    name);
+    params.append("contact", info);
+    params.append("message", msg);
+
+    await fetch(FEEDBACK_API, {
       method: 'POST',
-      body: JSON.stringify({
-        name: name,
-        contact: info,
-        message: msg
-      })
+      mode: 'no-cors',
+      body: params
     });
-    
-    const result = await response.json();
-    
-    if (result.success) {
-      $("contactForm").style.display = "none";
-      $("contactSuccess").style.display = "block";
-      // Clear form
-      $("contactName").value = "";
-      $("contactInfo").value = "";
-      $("contactMsg").value = "";
-    } else {
-      showToast("Error sending message. Please try again.");
-    }
+
+    // Show success UI
+    $("contactForm").style.display    = "none";
+    $("contactSuccess").style.display = "block";
+    $("contactName").value = "";
+    $("contactInfo").value = "";
+    $("contactMsg").value  = "";
   } catch(err) {
     console.error("Failed to send message:", err);
     showToast("Network error. Please check your connection.");
   } finally {
-    btn.disabled = false;
+    btn.disabled    = false;
     btn.textContent = originalText;
   }
 }
@@ -1498,4 +1492,3 @@ function debounce(fn, ms) {
 </script>
 </body>
 </html>
-
